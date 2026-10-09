@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes 笔记本 - KingStudy</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/styles.css">
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">导航</div>
+            <button class="close-sidebar" id="close-sidebar">☰</button>
+        </div>
+        <div class="sidebar-nav">
+            <a href="home.html" class="nav-item">🏠 首页</a>
+            <a href="aichat.html" class="nav-item">💬 ChatBox</a>
+            <a href="notes.html" class="nav-item active">📝 笔记本</a>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="new-chat-btn" id="new-note-btn">+ 新建笔记</button>
+        </div>
+    </div>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content" id="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="header-container">
+            <div class="top-navbar">
+                <div class="navbar-left">
+                    <button class="menu-btn" id="menu-btn" title="菜单">
+                        <img src="../static/img/menu.svg" alt="菜单" width="24" height="24">
+                    </button>
+                    <div class="title">Notes - 笔记本</div>
+                </div>
+<!--                <div class="navbar-right">-->
+<!--                    <button class="menu-btn" id="search-notes-trigger" title="搜索笔记">-->
+<!--                        <img src="../static/img/search.svg" alt="搜索笔记" width="24" height="24">-->
+<!--                    </button>-->
+<!--                    <button class="menu-btn" id="settings-trigger" title="设置">-->
+<!--                        <img src="../static/img/a-more2.svg" alt="更多" width="24" height="24">-->
+<!--                    </button>-->
+<!--                </div>-->
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="search-notes" placeholder="搜索笔记...">
+                </div>
+            </div>
+            
+            <div class="notes-grid" id="notes-container">
+                <!-- 笔记将会通过JavaScript动态加载 -->
+                <div class="empty-state">
+                    <p>暂无笔记</p>
+                    <button class="new-note-btn" id="create-first-note">创建第一篇笔记</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看笔记模态框 -->
+    <div class="settings-modal" id="view-note-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 class="settings-title" id="view-note-title">查看笔记</h2>
+                <button class="close-settings" id="close-view-modal">&times;</button>
+            </div>
+            <div class="settings-form">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <div id="view-note-title-content" class="view-content"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <div id="view-note-content" class="view-content"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div id="view-note-tags" class="view-content"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">创建时间</label>
+                    <div id="view-note-created" class="view-content"></div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button class="btn btn-secondary" id="close-view-note">关闭</button>
+<!--                <button class="btn btn-primary" id="edit-from-view">编辑</button>-->
+<!--                <button class="btn btn-danger" id="delete-note">删除</button>-->
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建/编辑笔记模态框 -->
+    <div class="settings-modal" id="note-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 class="settings-title" id="modal-title">新建笔记</h2>
+                <button class="close-settings" id="close-modal">&times;</button>
+            </div>
+            <div class="settings-form">
+                <form id="note-form">
+                    <input type="hidden" id="note-id">
+                    <div class="form-group">
+                        <label for="note-title" class="form-label">标题</label>
+                        <input type="text" id="note-title" class="form-input" placeholder="输入笔记标题">
+                    </div>
+                    <div class="form-group">
+                        <label for="note-content" class="form-label">内容</label>
+                        <textarea id="note-content" class="form-input" placeholder="输入笔记内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="note-tags" class="form-label">标签（用逗号分隔）</label>
+                        <input type="text" id="note-tags" class="form-input" placeholder="例如：学习, Python, 人工智能">
+                    </div>
+                </form>
+            </div>
+            <div class="settings-footer">
+                <button class="btn btn-secondary" id="cancel-note">取消</button>
+                <button class="btn btn-primary" id="save-note">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API端点基础URL
+        const API_BASE_URL = '/api';
+        
+        // DOM元素
+        const notesContainer = document.getElementById('notes-container');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const noteModal = document.getElementById('note-modal');
+        const viewNoteModal = document.getElementById('view-note-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const closeViewModalBtn = document.getElementById('close-view-modal');
+        const closeViewNoteBtn = document.getElementById('close-view-note');
+        const deleteNoteBtn = document.getElementById('delete-note');
+        const editFromViewBtn = document.getElementById('edit-from-view');
+        const cancelNoteBtn = document.getElementById('cancel-note');
+        const saveNoteBtn = document.getElementById('save-note');
+        const noteForm = document.getElementById('note-form');
+        const searchInput = document.getElementById('search-notes');
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const closeSidebarBtn = document.getElementById('close-sidebar');
+        const apiSettingsBtn = document.getElementById('api-settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings');
+        const searchNotesBtn = document.getElementById('search-notes-btn');
+        const notesSearchModal = document.getElementById('notes-search-modal');
+        const closeNotesSearchBtn = document.getElementById('close-notes-search');
+        
+        // 当前编辑的笔记ID
+        let currentNoteId = null;
+        let currentViewNote = null;
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotes();
+            
+            // 绑定事件
+            newNoteBtn.addEventListener('click', openNewNoteModal);
+            closeModalBtn.addEventListener('click', closeNoteModal);
+            closeViewModalBtn.addEventListener('click', closeViewNoteModal);
+            closeViewNoteBtn.addEventListener('click', closeViewNoteModal);
+            // deleteNoteBtn.addEventListener('click', deleteNoteFromView);
+            // editFromViewBtn.addEventListener('click', editNoteFromView);
+            cancelNoteBtn.addEventListener('click', closeNoteModal);
+            saveNoteBtn.addEventListener('click', saveNote);
+            searchInput.addEventListener('input', debounce(searchNotes, 300));
+            
+            // 侧边栏事件
+            menuBtn.addEventListener('click', toggleSidebar);
+            closeSidebarBtn.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+        });
+        
+        // 切换侧边栏
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            document.getElementById('main-content').classList.toggle('sidebar-open');
+        }
+        
+        // 打开设置弹窗
+        function openSettingsModal() {
+            settingsModal.classList.add('active');
+        }
+        
+        // 关闭设置弹窗
+        function closeSettingsModal() {
+            settingsModal.classList.remove('active');
+        }
+        
+        // 打开笔记搜索弹窗
+        function openNotesSearchModal() {
+            notesSearchModal.classList.add('active');
+        }
+        
+        // 关闭笔记搜索弹窗
+        function closeNotesSearchModal() {
+            notesSearchModal.classList.remove('active');
+        }
+        
+        // 加载所有笔记
+        async function loadNotes() {
+            try {
+                console.log('开始加载笔记...');
+                const response = await fetch(`${API_BASE_URL}/notes`);
+                console.log('API响应状态:', response.status);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API返回数据:', data);
+                    console.log('笔记列表:', data.result);
+                    displayNotes(data.result);
+                } else {
+                    console.error('加载笔记失败:', response.status);
+                    showError('加载笔记失败');
+                }
+            } catch (error) {
+                console.error('加载笔记时出错:', error);
+                showError('加载笔记时出错');
+            }
+        }
+        
+        // 显示笔记列表
+        function displayNotes(notes) {
+            console.log('显示笔记列表:', notes);
+            if (!notes || notes.length === 0) {
+                console.log('笔记列表为空，显示暂无笔记');
+                notesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无笔记</p>
+                        <button class="new-note-btn" id="create-first-note">创建第一篇笔记</button>
+                    </div>
+                `;
+                document.getElementById('create-first-note').addEventListener('click', openNewNoteModal);
+                return;
+            }
+            
+            notesContainer.innerHTML = '';
+            notes.forEach(note => {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.innerHTML = `
+                    <h3 class="note-title">${note.title || '未命名笔记'}</h3>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-tags">
+                        ${(note.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="note-meta">
+                        <span>${formatDate(note.created_at)}</span>
+                        <span>${note.id}</span>
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn btn-secondary btn-sm edit-note-btn" data-note-id="${note.id}">编辑</button>
+                        <button class="btn btn-danger btn-sm delete-note-btn" data-note-id="${note.id}">删除</button>
+                    </div>
+                `;
+                
+                noteCard.addEventListener('click', (e) => {
+                    // 只有点击编辑按钮时才触发编辑功能
+                    if (!e.target.classList.contains('edit-note-btn')) {
+                        viewNote(note);
+                    }
+                });
+                
+                // 为编辑按钮添加事件监听器
+                noteCard.querySelector('.edit-note-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openEditNoteModal(note);
+                });
+
+                // 为删除按钮添加事件监听器
+                noteCard.querySelector('.delete-note-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteNote(note.id, note.title || '未命名笔记');
+                });
+                
+                notesContainer.appendChild(noteCard);
+            });
+        }
+        
+        // 打开查看笔记模态框
+        function viewNote(note) {
+            currentViewNote = note;
+            document.getElementById('view-note-title').textContent = note.title || '未命名笔记';
+            document.getElementById('view-note-title-content').textContent = note.title || '未命名笔记';
+            document.getElementById('view-note-content').textContent = note.content;
+            document.getElementById('view-note-tags').innerHTML = (note.tags || []).map(tag => `<span class="tag">${tag}</span>`).join(' ');
+            document.getElementById('view-note-created').textContent = formatDate(note.created_at);
+            viewNoteModal.classList.add('active');
+        }
+
+        // 关闭查看笔记模态框
+        function closeViewNoteModal() {
+            viewNoteModal.classList.remove('active');
+            currentViewNote = null;
+        }
+
+        // 从查看模式切换到编辑模式
+        function editNoteFromView() {
+            closeViewNoteModal();
+            // 确保在下一个事件循环中打开编辑模态框
+            setTimeout(() => openEditNoteModal(currentViewNote), 0);
+        }
+
+        // 从查看模态框删除笔记
+        function deleteNoteFromView() {
+            if (currentViewNote) {
+                deleteNote(currentViewNote.id, currentViewNote.title || '未命名笔记');
+            }
+        }
+        
+        // 打开新建笔记模态框
+        function openNewNoteModal() {
+            currentNoteId = null;
+            document.getElementById('modal-title').textContent = '新建笔记';
+            noteForm.reset();
+            document.getElementById('note-id').value = '';
+            noteModal.classList.add('active');
+        }
+
+        // 打开编辑笔记模态框
+        function openEditNoteModal(note) {
+            currentNoteId = note.id;
+            document.getElementById('modal-title').textContent = '编辑笔记';
+            document.getElementById('note-id').value = note.id;
+            document.getElementById('note-title').value = note.title || '';
+            document.getElementById('note-content').value = note.content || '';
+            document.getElementById('note-tags').value = (note.tags || []).join(', ');
+            noteModal.classList.add('active');
+        }
+
+        // 关闭模态框
+        function closeNoteModal() {
+            noteModal.classList.remove('active');
+        }
+
+        // 删除笔记
+        async function deleteNote(noteId, noteTitle) {
+            if (!confirm(`确定要删除笔记"${noteTitle}"吗？此操作不可恢复。`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/note/${noteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    loadNotes(); // 重新加载笔记列表
+                    closeViewNoteModal(); // 关闭查看模态框（如果打开的话）
+                    alert('笔记删除成功');
+                } else {
+                    const errorData = await response.json();
+                    console.error('删除笔记失败:', errorData);
+                    alert(`删除笔记失败: ${errorData.error}`);
+                }
+            } catch (error) {
+                console.error('删除笔记时出错:', error);
+                alert('删除笔记时出错');
+            }
+        }
+
+        // 保存笔记
+        async function saveNote() {
+            const title = document.getElementById('note-title').value.trim();
+            const content = document.getElementById('note-content').value.trim();
+            const tags = document.getElementById('note-tags').value
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag);
+            
+            if (!content) {
+                alert('请输入笔记内容');
+                return;
+            }
+            
+            const noteData = { content, tags };
+            if (title) {
+                noteData.title = title;
+            }
+            
+            try {
+                let response;
+                if (currentNoteId) {
+                    // 更新笔记
+                    response = await fetch(`${API_BASE_URL}/note/${currentNoteId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(noteData)
+                    });
+                } else {
+                    // 创建新笔记
+                    response = await fetch(`${API_BASE_URL}/note`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(noteData)
+                    });
+                }
+                
+                if (response.ok) {
+                    closeNoteModal();
+                    loadNotes(); // 重新加载笔记列表
+                } else {
+                    const errorData = await response.json();
+                    console.error('保存笔记失败:', errorData);
+                    alert(`保存笔记失败: ${errorData.error}`);
+                }
+            } catch (error) {
+                console.error('保存笔记时出错:', error);
+                alert('保存笔记时出错');
+            }
+        }
+        
+        // 搜索笔记
+        async function searchNotes() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                loadNotes();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/note/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+                
+                if (response.ok) {
+                    const results = await response.json();
+                    displayNotes(results);
+                } else {
+                    console.error('搜索笔记失败:', response.status);
+                    showError('搜索笔记失败');
+                }
+            } catch (error) {
+                console.error('搜索笔记时出错:', error);
+                showError('搜索笔记时出错');
+            }
+        }
+        
+        // 工具函数：格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN');
+        }
+        
+        // 工具函数：防抖
+        function debounce(func, delay) {
+            let timeoutId;
+            return function (...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+        
+        // 工具函数：显示错误信息
+        function showError(message) {
+            // 创建临时提示元素
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #f44336;
+                color: white;
+                padding: 16px;
+                border-radius: 4px;
+                z-index: 1001;
+            `;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除提示
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+        
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target === noteModal) {
+                closeNoteModal();
+            }
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
+            if (event.target === notesSearchModal) {
+                closeNotesSearchModal();
+            }
+            if (event.target === viewNoteModal) {
+                closeViewNoteModal();
+            }
+        };
+    </script>
+
+    <style>
+        .notes-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header-content h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #444;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 50px;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .note-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .note-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .note-content {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+            min-height: 24px;
+        }
+
+        .tag {
+            background-color: #eef2ff;
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            font-size: 0.85rem;
+            /*margin: 10px 0;*/
+            /*padding: 8px 0;*/
+            /*border-top: 1px solid #f0f0f0;*/
+            /*border-bottom: 1px solid #f0f0f0;*/
+        }
+
+        .note-actions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 查看笔记模态框样式 */
+        #view-note-modal .view-content {
+            min-height: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #eee;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        #view-note-modal .view-content:not(:last-child) {
+            margin-bottom: 10px;
+        }
+
+        #view-note-modal .tag {
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .nav-buttons a {
+                margin: 0 10px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            .note-card {
+                padding: 15px;
+            }
+
+            .note-title {
+                font-size: 1.2rem;
+            }
+
+            .note-actions {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .btn-sm {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                min-width: 45px;
+            }
+        }
+    </style>
+</body>
+</html>

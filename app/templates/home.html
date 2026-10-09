@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KingStudy - 学习助手</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/styles.css">
+</head>
+<body>
+    <div class="home-container">
+        <div class="container">
+            <h1>KingStudy 学习助手</h1>
+            <p class="subtitle">一站式AI学习伴侣，助您高效学习与思考</p>
+            
+            <div class="features">
+                <div class="feature-card" onclick="location.href='aichat.html'">
+                    <div class="feature-icon chat-icon">💬</div>
+                    <h2 class="feature-title">ChatBox 聊天室</h2>
+                    <p class="feature-description">与AI进行深度对话，解答疑问，激发灵感。支持多种AI模型，提供沉浸式聊天体验。</p>
+                    <button class="btn">进入聊天室</button>
+                </div>
+                
+                <div class="feature-card" onclick="location.href='notes.html'">
+                    <div class="feature-icon notes-icon">📝</div>
+                    <h2 class="feature-title">Notes 笔记本</h2>
+                    <p class="feature-description">记录、管理和检索您的学习笔记。支持标签分类和智能搜索功能。</p>
+                    <button class="btn">查看笔记</button>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>© 2025 KingStudy - 让学习更简单</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .home-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 800px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 300px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .chat-icon {
+            color: #667eea;
+        }
+
+        .notes-icon {
+            color: #764ba2;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+            height: 80px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</body>
+</html>

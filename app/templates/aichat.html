@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBox - AI聊天室</title>
+    <link rel="stylesheet" type="text/css" href="../static/css/styles.css">
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">导航</div>
+            <button class="close-sidebar" id="close-sidebar">☰</button>
+        </div>
+        <div class="sidebar-nav">
+            <a href="home.html" class="nav-item">🏠 首页</a>
+            <a href="aichat.html" class="nav-item active">💬 ChatBox</a>
+            <a href="notes.html" class="nav-item">📝 笔记本</a>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">API 设置</div>
+            <div class="sidebar-nav">
+                <button class="nav-item" id="api-settings-btn">⚙️ API配置</button>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">搜索笔记</div>
+            <div class="sidebar-nav">
+                <button class="nav-item" id="search-notes-btn">🔍 搜索笔记</button>
+            </div>
+        </div>
+<!--        <div class="sidebar-section">-->
+<!--            <div class="sidebar-section-title">历史对话</div>-->
+<!--            <div class="history-list" id="history-list"></div>-->
+<!--        </div>-->
+        <div class="sidebar-footer">
+            <button class="new-chat-btn" id="new-chat-btn">开始新对话</button>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div class="settings-modal" id="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h3 class="settings-title">API 设置</h3>
+                <button class="close-settings" id="close-settings">&times;</button>
+            </div>
+            <form class="settings-form" id="settings-form">
+                <div class="form-group">
+                    <label for="provider-select" class="form-label">AI 提供商</label>
+                    <select id="provider-select" class="form-input">
+                        <option value="bigmodel">智谱AI (默认)</option>
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="qwen">通义千问</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="api-url" class="form-label">API 地址</label>
+                    <input type="text" id="api-url" class="form-input" placeholder="https://api.example.com/v1">
+                </div>
+                <div class="form-group">
+                    <label for="api-key" class="form-label">API 密钥</label>
+                    <input type="password" id="api-key" class="form-input" placeholder="输入您的API密钥">
+                </div>
+                <div class="form-group">
+                    <label for="model-name" class="form-label">模型名称</label>
+                    <input type="text" id="model-name" class="form-input" list="model-options" placeholder="选择或输入模型名称">
+                    <datalist id="model-options">
+                        <!-- 模型选项将通过JavaScript动态加载 -->
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label for="persona" class="form-label">AI 角色设定</label>
+                    <textarea id="persona" class="form-input" placeholder="例如：你是一个专业的心理咨询师..." rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="search-notes" class="form-label">
+                        <input type="checkbox" id="search-notes">
+                        启用笔记搜索功能
+                    </label>
+                </div>
+<!--                <div class="form-group">-->
+<!--                    <label for="temperature" class="form-label">温度 (0-1)</label>-->
+<!--                    <input type="number" id="temperature" class="form-input" placeholder="0.7" min="0" max="1" step="0.1" value="0.7">-->
+<!--                </div>-->
+<!--                <div class="form-group">-->
+<!--                    <label for="max-tokens" class="form-label">最大令牌数</label>-->
+<!--                    <input type="number" id="max-tokens" class="form-input" placeholder="2048" min="1" max="8192" value="2048">-->
+<!--                </div>-->
+            </form>
+            <div class="settings-footer">
+                <button type="button" class="btn btn-secondary" id="clear-settings">清除</button>
+                <button type="button" class="btn btn-primary" id="save-settings">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 笔记搜索弹窗 -->
+    <div class="notes-search-modal" id="notes-search-modal">
+        <div class="notes-search-content">
+            <div class="notes-search-header">
+                <h3 class="notes-search-title">搜索笔记</h3>
+                <button class="close-notes-search" id="close-notes-search">&times;</button>
+            </div>
+            <div class="notes-search-body">
+                <div class="search-box">
+                    <input type="text" id="notes-search-input" placeholder="输入关键词搜索笔记...">
+                    <button id="search-notes-submit-btn">搜索</button>
+                </div>
+                <div class="notes-search-results" id="notes-search-results">
+                    <div class="no-results">请输入关键词搜索笔记</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content" id="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="header-container">
+            <div class="top-navbar">
+                <div class="navbar-left">
+                    <button class="menu-btn" id="menu-btn" title="菜单">
+                        <img src="../static/img/menu.svg" alt="菜单" width="24" height="24">
+                    </button>
+                    <div class="title">ChatBox - AI聊天室</div>
+                </div>
+<!--                <div class="navbar-right">-->
+<!--                    <button class="menu-btn" id="search-notes-trigger" title="搜索笔记">-->
+<!--                        <img src="../static/img/search.svg" alt="搜索笔记" width="24" height="24">-->
+<!--                    </button>-->
+<!--                    <button class="menu-btn" id="settings-trigger" title="设置">-->
+<!--                        <img src="../static/img/a-more2.svg" alt="更多" width="24" height="24">-->
+<!--                    </button>-->
+<!--                </div>-->
+            </div>
+        </header>
+
+        <!-- 主聊天区域 -->
+        <main class="chat-main">
+            <div class="chat-container">
+                <!-- 聊天消息区域 -->
+                <div class="chat-messages-wrapper">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message-container bot">
+                            <div class="avatar bot-avatar">AI</div>
+                            <div class="message-content">
+                                <div class="message bot-message">
+                                    你好！今天感觉如何呀？我永远是你忠实的倾听者。无论是想分享一缕阳光，还是倒一倒心里的雨，我都在这里。你的快乐、烦恼或任何小思绪，我都愿意安静地听你说。
+                                </div>
+                                <div class="message-time">刚刚</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="input-area-wrapper">
+                    <div class="input-area">
+                        <textarea class="message-input" id="message-input" placeholder="向 AI 发送消息..." rows="1"></textarea>
+                        <button class="send-button" id="send-button" title="发送消息">
+                            <svg class="send-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="save-note-button" id="save-note-button" title="保存最后问答为笔记 (Ctrl+S)">
+                            <svg class="save-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="7 3 7 8 15 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../static/js/scripts.js"></script>
+</body>
+</html>
